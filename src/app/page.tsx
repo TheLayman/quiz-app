@@ -1,12 +1,12 @@
 // src/app/page.tsx
 "use client";
-
+import { useRef } from "react";
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import html2canvas from "html2canvas";
+import domtoimage from "dom-to-image-more";
 
 type Option = { label: string; text: string; points: number };
 type Question = { question: string; options: Option[] };
@@ -175,35 +175,43 @@ export default function QuizApp() {
   };
 
   const probability = Math.round((score / maxScore) * 100);
-
+  const cardRef = useRef<HTMLDivElement>(null);
   // NEW: capture & share screenshot
   const handleShareScreenshot = async () => {
+    if (!cardRef.current) {
+      alert("Result card not mounted yet.");
+      return;
+    }
     try {
-      const cardEl = document.getElementById("result-card");
-      if (!cardEl) throw new Error("Result card not found");
-
-      const canvas = await html2canvas(cardEl, { scale: 2 });
-      const blob: Blob = await new Promise((res) =>
-        canvas.toBlob((b) => res(b!), "image/png")
-      );
+      // produce a Blob of your card
+      const blob: Blob = await domtoimage.toBlob(cardRef.current, {
+        width: cardRef.current.offsetWidth * (window.devicePixelRatio || 2),
+        height: cardRef.current.offsetHeight * (window.devicePixelRatio || 2),
+        style: {
+          // ensure transparent background if you like
+          backgroundColor: null,
+        },
+      });
+  
       const file = new File([blob], "quiz-result.png", { type: "image/png" });
-
       const shareData: ShareData = {
         title: "My Quiz Result",
         text: `I scored ${probability}% on the quiz—try it yourself!`,
         url: window.location.href,
         files: [file],
       };
-
+  
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-        alert("Image sharing not supported—copied result to clipboard");
+        await navigator.clipboard.writeText(
+          `${shareData.text} ${shareData.url}`
+        );
+        alert("Image sharing not supported—copied text & link to clipboard.");
       }
-    } catch (e) {
-      console.error(e);
-      alert("Failed to share screenshot");
+    } catch (err) {
+      console.error("dom-to-image-more error:", err);
+      alert("Failed to generate image. See console for details.");
     }
   };
 
@@ -239,8 +247,8 @@ export default function QuizApp() {
     else bandText = "Red‑hot runway; buckle up!";
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <Card id="result-card" className="w-full max-w-md">
+      <div  className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <Card ref={cardRef} id="result-card" className="w-full max-w-md">
           <CardContent className="p-6 space-y-4 text-center">
             <h2 className="text-2xl font-bold">Hey {name}!</h2>
             <p className="text-xl">Your probability of getting laid this week is</p>
