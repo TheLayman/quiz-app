@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Quiz
 
-## Getting Started
+A fun, single‑page Next.js app that walks you through 15 MCQ prompts and computes your “probability of getting laid this week.” Built with Tailwind CSS and shadcn/ui components, and deployable in seconds on Vercel.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🔍 Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Name prompt & onboarding screen**  
+- **One question per view** with a progress bar  
+- **Automatically scores** each answer (A=4, B=3, C=2, D=0)  
+- **Final result** displayed as a percentage + playful band  
+- “Try Again” button to restart  
+- 100% client‑side (no API routes)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠 Tech Stack
 
-## Learn More
+- **Framework:** Next.js 14 (App Router)  
+- **Styling:** Tailwind CSS  
+- **UI Library:** shadcn/ui (Button, Card, Progress, Input)  
+- **Deployment:** Vercel (zero‑config)
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
