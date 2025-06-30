@@ -178,26 +178,39 @@ export default function QuizApp() {
   const cardRef = useRef<HTMLDivElement>(null);
   // NEW: capture & share screenshot
   const handleShareScreenshot = async () => {
-    if (!cardRef.current) {
-      alert("Result card not mounted yet.");
-      return;
-    }
+    const el = cardRef.current;
+    if (!el) return alert("Result card not mounted yet.");
+  
+    const { width, height } = el.getBoundingClientRect();
+    const scale = window.devicePixelRatio || 1;
+  
     try {
-      // produce a Blob of your card
-      const blob: Blob = await domtoimage.toBlob(cardRef.current, {
-        width: cardRef.current.offsetWidth * (window.devicePixelRatio || 2),
-        height: cardRef.current.offsetHeight * (window.devicePixelRatio || 2),
+      const blob = await domtoimage.toBlob(el, {
+        width:  width * scale,
+        height: height * scale,
+        cacheBust: true,
+        bgcolor: "#fff",  // ensure white behind any transparent parts
         style: {
-          // ensure transparent background if you like
-          backgroundColor: null,
+          transform:       `scale(${scale})`,
+          transformOrigin: "top left",
+          width:            `${width}px`,
+          height:           `${height}px`,
+        },
+        filter: (node) => {
+          // strip any borders/backgrounds on everything except the root
+          if (node !== el && node instanceof HTMLElement) {
+            node.style.border = "none";
+            node.style.backgroundColor = "transparent";
+          }
+          return true;
         },
       });
   
       const file = new File([blob], "quiz-result.png", { type: "image/png" });
       const shareData: ShareData = {
         title: "My Quiz Result",
-        text: `I scored ${probability}% on the quiz—try it yourself!`,
-        url: window.location.href,
+        text:  `I scored ${probability}% on the quiz—try it yourself!`,
+        url:   window.location.href,
         files: [file],
       };
   
@@ -210,11 +223,11 @@ export default function QuizApp() {
         alert("Image sharing not supported—copied text & link to clipboard.");
       }
     } catch (err) {
-      console.error("dom-to-image-more error:", err);
-      alert("Failed to generate image. See console for details.");
+      console.error(err);
+      alert("Screenshot failed—see console.");
     }
   };
-
+   
   // NAME ENTRY
   if (!started) {
     return (
