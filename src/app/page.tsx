@@ -181,23 +181,24 @@ export default function QuizApp() {
     const el = cardRef.current;
     if (!el) return alert("Result card not mounted yet.");
   
+    // 1) Capture the card as before
     const { width, height } = el.getBoundingClientRect();
     const scale = window.devicePixelRatio || 1;
   
+    let blob: Blob;
     try {
-      const blob = await domtoimage.toBlob(el, {
+      blob = await domtoimage.toBlob(el, {
         width:  width * scale,
         height: height * scale,
         cacheBust: true,
-        bgcolor: "#fff",  // ensure white behind any transparent parts
+        bgcolor: "#fff",
         style: {
           transform:       `scale(${scale})`,
           transformOrigin: "top left",
           width:            `${width}px`,
           height:           `${height}px`,
         },
-        filter: (node) => {
-          // strip any borders/backgrounds on everything except the root
+        filter: (node: HTMLElement) => {
           if (node !== el && node instanceof HTMLElement) {
             node.style.border = "none";
             node.style.backgroundColor = "transparent";
@@ -205,29 +206,53 @@ export default function QuizApp() {
           return true;
         },
       });
-  
-      const file = new File([blob], "quiz-result.png", { type: "image/png" });
-      const shareData: ShareData = {
-        title: "My Quiz Result",
-        text:  `I scored ${probability}% on the quiz—try it yourself!`,
-        url:   window.location.href,
-        files: [file],
-      };
-  
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(
-          `${shareData.text} ${shareData.url}`
-        );
-        alert("Image sharing not supported—copied text & link to clipboard.");
-      }
     } catch (err) {
       console.error(err);
-      alert("Screenshot failed—see console.");
+      return alert("Screenshot failed—see console.");
+    }
+  
+    const scoreText = `I just scored ${probability}% in this test`;
+    const shareUrl  = window.location.href;
+    const fullText  = `${scoreText}, try now at ${shareUrl}`;
+  
+    const file = new File([blob], "quiz-result.png", { type: "image/png" });
+  
+    // 2) Attempt files+text+url share
+    const shareWithFile = {
+      title: "Quiz Result",
+      text:  fullText,
+      url:   shareUrl,
+      files: [file] as File[],
+    };
+  
+    // Check if the browser supports sharing files+text
+    const canShareFiles = !!navigator.canShare && navigator.canShare({
+      files: [file],
+      text:  fullText,
+      url:   shareUrl,
+    });
+  
+    try {
+      if (canShareFiles) {
+        await navigator.share(shareWithFile);
+      } else if (navigator.canShare?.({ text: fullText, url: shareUrl })) {
+        // fallback: text+url only
+        await navigator.share({
+          title: "Quiz Result",
+          text:  fullText,
+          url:   shareUrl,
+        });
+      } else {
+        // ultimate fallback: copy to clipboard
+        await navigator.clipboard.writeText(fullText);
+        alert("Image sharing not supported—copied text to clipboard.");
+      }
+    } catch (err) {
+      console.error("Share failed:", err);
+      alert("Share canceled or failed.");
     }
   };
-   
+  
   // NAME ENTRY
   if (!started) {
     return (
