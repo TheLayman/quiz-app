@@ -1,103 +1,302 @@
-import Image from "next/image";
+// src/app/page.tsx
+"use client";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+import React, { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import html2canvas from "html2canvas";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+type Option = { label: string; text: string; points: number };
+type Question = { question: string; options: Option[] };
+
+const questions: Question[] = [
+  {
+    question: "Current relationship status",
+    options: [
+      { label: "A", text: "Committed partner you live with", points: 4 },
+      { label: "B", text: "Committed partner you don’t live with", points: 3 },
+      { label: "C", text: "Casual dating / situationship", points: 2 },
+      { label: "D", text: "Single & not seeing anyone", points: 0 },
+    ],
+  },
+  {
+    question: "How often did you have sex in the last 30 days?",
+    options: [
+      { label: "A", text: "≥ 8 times", points: 4 },
+      { label: "B", text: "4–7 times", points: 3 },
+      { label: "C", text: "1–3 times", points: 2 },
+      { label: "D", text: "0 times", points: 0 },
+    ],
+  },
+  {
+    question:
+      "Already scheduled 1‑on‑1 plans with someone you’re attracted to this week?",
+    options: [
+      { label: "A", text: "Yes, overnight or weekend trip", points: 4 },
+      { label: "B", text: "Yes, evening date", points: 3 },
+      { label: "C", text: "Only informal “maybe” plans", points: 2 },
+      { label: "D", text: "Nothing scheduled", points: 0 },
+    ],
+  },
+  {
+    question: "Active use of dating apps in the past 72 h",
+    options: [
+      { label: "A", text: "> 20 messages sent", points: 4 },
+      { label: "B", text: "5–20 messages", points: 3 },
+      { label: "C", text: "Browsing only", points: 2 },
+      { label: "D", text: "No apps / no use", points: 0 },
+    ],
+  },
+  {
+    question: "Social events you’ll attend this week",
+    options: [
+      { label: "A", text: "≥ 2 large events", points: 4 },
+      { label: "B", text: "1 large event", points: 3 },
+      { label: "C", text: "Small friend meet‑ups only", points: 2 },
+      { label: "D", text: "None", points: 0 },
+    ],
+  },
+  {
+    question: "Privacy of your living space",
+    options: [
+      { label: "A", text: "Own place / partner’s place always free", points: 4 },
+      { label: "B", text: "Frequently have privacy", points: 3 },
+      { label: "C", text: "Sometimes have privacy", points: 2 },
+      { label: "D", text: "Rarely/never have privacy", points: 0 },
+    ],
+  },
+  {
+    question: "Personal energy & health this week",
+    options: [
+      { label: "A", text: "Feeling great, high energy", points: 4 },
+      { label: "B", text: "Fine overall", points: 3 },
+      { label: "C", text: "A bit under the weather", points: 2 },
+      { label: "D", text: "Very tired / sick", points: 0 },
+    ],
+  },
+  {
+    question: "Confidence flirting in person",
+    options: [
+      { label: "A", text: "I start most flirty interactions", points: 4 },
+      { label: "B", text: "Comfortable if mutual", points: 3 },
+      { label: "C", text: "Need alcohol / cues", points: 2 },
+      { label: "D", text: "Very uncomfortable", points: 0 },
+    ],
+  },
+  {
+    question: "Communication with a likely partner in the last 48 h",
+    options: [
+      { label: "A", text: "Explicitly talked about meeting up", points: 4 },
+      { label: "B", text: "Sent flirty messages", points: 3 },
+      { label: "C", text: "Casual chat only", points: 2 },
+      { label: "D", text: "No contact", points: 0 },
+    ],
+  },
+  {
+    question: "Grooming & self‑care readiness",
+    options: [
+      { label: "A", text: "Fresh haircut/style & wardrobe prepped", points: 4 },
+      { label: "B", text: "Pretty well groomed", points: 3 },
+      { label: "C", text: "Passable/neutral", points: 2 },
+      { label: "D", text: "Feeling unkempt", points: 0 },
+    ],
+  },
+  {
+    question: "Time‑demand from work/school this week",
+    options: [
+      { label: "A", text: "Light (< 20 h)", points: 4 },
+      { label: "B", text: "Moderate (20–40 h)", points: 3 },
+      { label: "C", text: "Heavy (40–60 h)", points: 2 },
+      { label: "D", text: "Crunch time (> 60 h)", points: 0 },
+    ],
+  },
+  {
+    question: "Stress/mood level",
+    options: [
+      { label: "A", text: "Relaxed & optimistic", points: 4 },
+      { label: "B", text: "Manageable", points: 3 },
+      { label: "C", text: "Somewhat stressed", points: 2 },
+      { label: "D", text: "Very stressed/irritable", points: 0 },
+    ],
+  },
+  {
+    question: "Alcohol or other social lubricants",
+    options: [
+      { label: "A", text: "Comfortable sober or light drinks", points: 4 },
+      { label: "B", text: "Likely 1–2 drinks", points: 3 },
+      { label: "C", text: "Need 3+ drinks to loosen up", points: 2 },
+      { label: "D", text: "Plan to stay totally home/sober & alone", points: 0 },
+    ],
+  },
+  {
+    question: "Travel distance to your most probable partner",
+    options: [
+      { label: "A", text: "Same bed", points: 4 },
+      { label: "B", text: "Same city", points: 3 },
+      { label: "C", text: "≤ 1 h commute", points: 2 },
+      { label: "D", text: "Different city/long‑distance", points: 0 },
+    ],
+  },
+  {
+    question: "Birth‑control / protection availability",
+    options: [
+      { label: "A", text: "Already on hand, both comfortable", points: 4 },
+      { label: "B", text: "Easy to get quickly", points: 3 },
+      { label: "C", text: "Might need a store run", points: 2 },
+      { label: "D", text: "None / unsure", points: 0 },
+    ],
+  },
+];
+
+const maxScore = questions.length * 4;
+
+export default function QuizApp() {
+  const [name, setName] = useState("");
+  const [started, setStarted] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [score, setScore] = useState(0);
+  const [finished, setFinished] = useState(false);
+
+  const startQuiz = () => {
+    if (name.trim()) setStarted(true);
+  };
+
+  const answerQuestion = (points: number) => {
+    const newScore = score + points;
+    if (current + 1 === questions.length) {
+      setScore(newScore);
+      setFinished(true);
+    } else {
+      setScore(newScore);
+      setCurrent(current + 1);
+    }
+  };
+
+  const probability = Math.round((score / maxScore) * 100);
+
+  // NEW: capture & share screenshot
+  const handleShareScreenshot = async () => {
+    try {
+      const cardEl = document.getElementById("result-card");
+      if (!cardEl) throw new Error("Result card not found");
+
+      const canvas = await html2canvas(cardEl, { scale: 2 });
+      const blob: Blob = await new Promise((res) =>
+        canvas.toBlob((b) => res(b!), "image/png")
+      );
+      const file = new File([blob], "quiz-result.png", { type: "image/png" });
+
+      const shareData: ShareData = {
+        title: "My Quiz Result",
+        text: `I scored ${probability}% on the quiz—try it yourself!`,
+        url: window.location.href,
+        files: [file],
+      };
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+        alert("Image sharing not supported—copied result to clipboard");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Failed to share screenshot");
+    }
+  };
+
+  // NAME ENTRY
+  if (!started) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 space-y-4">
+            <h1 className="text-2xl font-bold text-center">
+              Probability of Getting Laid Quiz
+            </h1>
+            <Input
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <Button className="w-full" onClick={startQuiz}>
+              Start
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // RESULTS
+  if (finished) {
+    let bandText = "";
+    if (score <= 14) bandText = "Looks like a pretty quiet week.";
+    else if (score <= 29) bandText = "Some sparks, but no guarantees.";
+    else if (score <= 44) bandText = "Odds are in your favor—make a move!";
+    else bandText = "Red‑hot runway; buckle up!";
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <Card id="result-card" className="w-full max-w-md">
+          <CardContent className="p-6 space-y-4 text-center">
+            <h2 className="text-2xl font-bold">Hey {name}!</h2>
+            <p className="text-xl">Your probability of getting laid this week is</p>
+            <p className="text-6xl font-extrabold">{probability}%</p>
+            <p className="italic">{bandText}</p>
+            <div className="space-y-2 mt-4">
+              <Button className="w-full" onClick={handleShareScreenshot}>
+                Share Result
+              </Button>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </Button>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => window.open("https://www.buymeacoffee.com/thelayman", "_blank")}
+              >
+                Buy me a beer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // QUESTIONS
+  const q = questions[current];
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+      <Card className="w-full max-w-xl">
+        <CardContent className="p-6 space-y-6">
+          <Progress value={(current / questions.length) * 100} />
+          <h2 className="text-xl font-semibold">
+            Question {current + 1} of {questions.length}
+          </h2>
+          <p className="font-medium">{q.question}</p>
+          <div className="space-y-3">
+            {q.options.map((opt) => (
+              <Button
+                key={opt.label}
+                className="w-full justify-start"
+                variant="outline"
+                onClick={() => answerQuestion(opt.points)}
+              >
+                <span className="font-bold mr-2">{opt.label}.</span>
+                {opt.text}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
