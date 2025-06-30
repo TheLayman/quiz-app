@@ -214,7 +214,7 @@ export default function QuizApp() {
         <Card className="w-full max-w-md">
           <CardContent className="p-6 space-y-4">
             <h1 className="text-2xl font-bold text-center">
-              Probability of Getting Laid Quiz
+              Will you get laid?
             </h1>
             <Input
               placeholder="Enter your name"
